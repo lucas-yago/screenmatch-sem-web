@@ -32,4 +32,5 @@ build/
 ### VS Code ###
 .vscode/
 
-.config.properties
+### Project ###
+config.properties
