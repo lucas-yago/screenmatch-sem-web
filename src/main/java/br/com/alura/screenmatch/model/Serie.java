@@ -1,20 +1,36 @@
 package br.com.alura.screenmatch.model;
 
 import br.com.alura.screenmatch.service.ConsultaChatGPT;
-import com.fasterxml.jackson.annotation.JsonAlias;
-
 import java.security.PrivateKey;
+
+import jakarta.persistence.*;
+import org.springframework.aop.target.LazyInitTargetSource;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.OptionalDouble;
 
+@Entity
+@Table(name = "series")
 public class Serie {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(unique = true)
     private String titulo;
     private Integer totalTemporadas;
     private Double avaliacao;
+    @Enumerated(EnumType.STRING)
     private Categoria genero;
     private String atores;
     private String poster;
     private String sinopse;
+
+    @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Episodio> episodios = new ArrayList<>();
+
+    public Serie() {
+    }
 
     public Serie(DadosSerie dadosSerie) {
         this.titulo = dadosSerie.titulo();
@@ -23,7 +39,16 @@ public class Serie {
         this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
         this.atores = dadosSerie.atores();
         this.poster = dadosSerie.poster();
-        this.sinopse = ConsultaChatGPT.obterTraducao(dadosSerie.sinopse()).trim();
+//        this.sinopse = ConsultaChatGPT.obterTraducao(dadosSerie.sinopse()).trim();  sinopse traduzida usando chat gpt
+        this.sinopse = dadosSerie.sinopse();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitulo() {
@@ -82,6 +107,15 @@ public class Serie {
         this.sinopse = sinopse;
     }
 
+    public List<Episodio> getEpisodios() {
+        return episodios;
+    }
+
+    public void setEpisodios(List<Episodio> episodios) {
+        episodios.forEach(e -> e.setSerie(this));
+        this.episodios = episodios;
+    }
+
     @Override
     public String toString() {
         return "Serie{" +
@@ -92,6 +126,7 @@ public class Serie {
                 "| atores = " + atores + '\'' +
                 "| poster = " + poster + '\'' +
                 "| sinopse = " + sinopse + '\'' +
+                "| episodios = " + episodios + '\'' +
                 '}';
     }
 }
